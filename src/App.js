@@ -12,26 +12,24 @@ class App extends Component {
     this.toggleIsStarted = this.toggleIsStarted.bind(this);
     this.updateGame = this.updateGame.bind(this);
     this.speeds = {
-      'slow': 300,
-      'med': 200,
-      'fast': 100 
+      'slow': 150,
+      'med': 100,
+      'fast': 50 
     };
     this.state = {
       game: {
-        width: 100,
-        height: 100,
+        width: 20,
+        height: 20,
         isPaused: false,
         isStarted: true,
         generations: 0,
-        speed: this.speeds['fast']
+        speed: this.speeds['slow']
       }
     };
   }
   changeSpeed(speed) {
     const game = this.state.game;
-    console.log(game.speed);
     game.speed = this.speeds[speed];
-    console.log(game.speed);
     this.setState({ game });
   }
   toggleIsPaused() {

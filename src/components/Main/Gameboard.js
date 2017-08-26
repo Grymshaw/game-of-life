@@ -11,9 +11,8 @@ export default class Gameboard extends React.Component {
     this.getNextBoard = this.getNextBoard.bind(this);
 
     const game = this.props.game;
-    console.log(game);
-    if(!game.board) {
-      game.board = this.randomizeBoard();
+    if(!game.liveSquares) {
+      game.liveSquares = this.randomizeBoard();
     }
     this.state = { game };
 
@@ -21,105 +20,130 @@ export default class Gameboard extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    //change speed of cycle
     if(nextProps.speed !== this.props.speed) {
       clearInterval(this.interval);
       this.interval = setInterval(this.getNextBoard, nextProps.speed);
     }
   }
 
-  getNextSquare(value, numAdjacent) {
-    if(value === 0 && numAdjacent === 3)
-      return 1;
-    if(value === 1 && (numAdjacent === 2 || numAdjacent === 3))
-      return 1;
-    return 0;
-  }
-
   getNextBoard() {
     const game = this.state.game;
-    const newBoard = JSON.parse(JSON.stringify(game.board));
-    game.board.map((row, y) => {
-      row.map((val, x) => {
-        const numAdjacentLiving = this.countAdjacentLivingSquares(x, y);
-        newBoard[y][x] = this.getNextSquare(val, numAdjacentLiving);
+    let liveSquares = game.liveSquares;
+
+    const liveRows = Object.keys(liveSquares);
+    const allPotentialSquares = liveRows.reduce((acc, y) => {
+      //inialize rows for potential squares
+      acc[y - 1] = acc[y - 1] || [];
+      acc[y] = [];
+      acc[y + 1] = acc[y + 1] || [];
+      //add possible x values to each row
+      liveSquares[y].map((x) => {
+        const adjacentSquares = this.getAdjacentSquares(x, y);
+        if(adjacentSquares[y - 1])
+          acc[y - 1].concat(adjacentSquares[y - 1].filter( val => !acc[y - 1].includes(val) ));
+        if(adjacentSquares[y])
+          acc[y].concat(adjacentSquares[y].filter( val => !acc[y].includes(val) ));
+        if(adjacentSquares[y + 1])
+          acc[y + 1].concat(adjacentSquares[y + 1].filter( val => !acc[y + 1].includes(val) ));
       });
-    })
-    game.board = newBoard;
+      return acc;
+    }, {});
+
+    const newLiveSquares = {};
+    Object.keys(allPotentialSquares).map((y, i , arr) => {
+      newLiveSquares[y] = allPotentialSquares[y].filter((x) => {
+        const numLive = this.countAdjacentLivingSquares(x, y);
+        //square is live
+        if (liveSquares[y] && liveSquares[y].includes(x)) {
+          return numLive === 2 || numLive === 3;
+        } else {
+          //square is dead
+          return numLive === 3;
+        }
+      });
+    });
+
+    //update game state
+    game.liveSquares = newLiveSquares;
     game.generations++;
     this.props.update(game);
+
   }
 
   randomizeBoard() {
     const game = this.props.game;
-    const board = [];
+    const liveSquares = {};
     for(let y = 0; y < game.height; y++) {
-      const row = [];
+      //add a string property for each row
+      liveSquares[`${y}`] = [];
       for(let x = 0; x < game.width; x++) {
-        row.push( Math.round(Math.random()) );
+        if( Math.round(Math.random()) === 1 ) {
+          liveSquares[`${y}`].push(x);
+        }
       }
-      board.push(row);
     }
-    return board;
+    return liveSquares;
   }
 
   getAdjacentSquares(x, y) {
+    y = parseInt(y);
     const game = this.state.game;
-    const adjacentSquares = [
-      [x-1, y-1],
-      [x, y-1],
-      [x+1, y-1],
+    const adjacentSquares = {
+      [`${y-1}`]: [x-1, x, x+1],
+      [`${y}`]: [x-1, x, x+1],
+      [`${y+1}`]: [x-1, x, x+1]
+    };
+    const rows = Object.keys(adjacentSquares);
+    for(let i = 0; i < rows.length; i++) {
+      if(parseInt(rows[i]) < 0 || parseInt(rows[i]) >= game.height) {
+        delete adjacentSquares[i];
+      } else {
+        adjacentSquares[rows[i]] = adjacentSquares[rows[i]].filter(val => val >= 0 && val < game.width);
+      }
+    }
+    return adjacentSquares;
+  }
 
-      [x-1, y],
-      [x+1, y],
-
-      [x-1, y+1],
-      [x, y+1],
-      [x+1, y+1]
-    ];
-    return adjacentSquares.filter((val) => {
-      return val[0] >= 0 && val[0] < game.width && val[1] >= 0 && val[1] < game.height;
-    });
+  arrayContainsArray(bigArr, littleArr) {
+    for(let i = 0; i < bigArr.length; i++) {
+      if(JSON.stringify(bigArr[i]) === JSON.stringify(littleArr))
+        return true;
+    }
+    return false;
   }
 
   countAdjacentLivingSquares(x, y) {
-    const game = this.state.game;
+    const liveSquares = this.state.game.liveSquares;
     const squaresToCheck = this.getAdjacentSquares(x, y);
-    return squaresToCheck.reduce((acc, val) => {
-      return acc + game.board[val[1]][val[0]];
+    const rows = Object.keys(squaresToCheck);
+    return rows.reduce((acc, y, i, arr) => {
+      return acc + arr[y].reduce((subAcc, x) => {
+        return subAcc + (liveSquares[i] ? (liveSquares[i].includes(x) ? 1 : 0) : 0);
+      }, 0);
     }, 0);
   }
 
   render() {
     const game = this.state.game;
-    //clear interval if game is paused; set interval if not
-    if(game.isPaused) {
-      clearInterval(this.interval);
-      this.interval = null;
-    } else if (!game.isPaused && !this.interval) {
-      this.interval = setInterval(this.getNextBoard, game.speed);
+    const squares = [];
+    for(let y = 0; y < game.height; y++) {
+      for(let x = 0; x < game.width; x++) {
+        squares.push([x, y]);
+      }
     }
 
     return (
       <div>
         <GenerationCounter count={game.generations} />
         <div style={{width: `${10 * game.width}` , height: `${10 * game.height}`, display: 'flex', flexWrap: 'wrap'}}>
-        {
-          game.board.map((row, y) => {
+        {squares.map((coords) => {
             return (
-              row.map((val, x) => {
-                return (
-                  <GameSquare alive={val}
-                    width={500 / game.width}
-                    height={500 / game.height}
-                    x={x}
-                    y={y}
-                    neighbours={this.countAdjacentLivingSquares(x, y)}
-                  />
-                );
-              })
+              <GameSquare alive={game.liveSquares[coords[1]].includes(coords[0])}
+              x={coords[0]}
+              y={coords[1]}/>
             );
-          })
-        }
+        })}
         </div>
       </div>
     );
