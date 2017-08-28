@@ -12,14 +12,14 @@ class App extends Component {
     this.toggleIsStarted = this.toggleIsStarted.bind(this);
     this.updateGame = this.updateGame.bind(this);
     this.speeds = {
-      'slow': 150,
-      'med': 100,
-      'fast': 50 
+      'slow': 200,
+      'med': 150,
+      'fast': 100 
     };
     this.state = {
       game: {
-        width: 20,
-        height: 20,
+        width: 50,
+        height: 50,
         isPaused: false,
         isStarted: true,
         generations: 0,

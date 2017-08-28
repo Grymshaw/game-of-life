@@ -6,12 +6,15 @@ import GenerationCounter from './GenerationCounter';
 export default class Gameboard extends React.Component {
   constructor(props) {
     super(props);
+    this.toggleLiveSquare = this.toggleLiveSquare.bind(this);
     this.countAdjacentLivingSquares = this.countAdjacentLivingSquares.bind(this);
     this.getAdjacentSquares = this.getAdjacentSquares.bind(this);
     this.getNextBoard = this.getNextBoard.bind(this);
 
     const liveSquares = this.randomizeBoard();
     this.state = { liveSquares };
+
+    this.makeGrid();
 
     this.interval = setInterval(this.getNextBoard, this.props.speed);
   }
@@ -30,10 +33,12 @@ export default class Gameboard extends React.Component {
 
     //get all potential squares
     const allPotentialSquares = liveSquares.reduce((acc, val) => {
-      acc = acc.concat(this.getAdjacentSquares(val));
+      acc = acc.concat(
+        //filter ones already in acc
+          this.getAdjacentSquares(val).filter(cur => !acc.includes(cur))
+      );
       return acc;
-    }, [])
-    .filter((val, i, arr) => { return arr.indexOf(val) === i; });
+    }, []);
 
     //see which potential ones should be alive
     liveSquares = allPotentialSquares.filter((val) => {
@@ -75,44 +80,85 @@ export default class Gameboard extends React.Component {
       [x-1, y], [x+1, y],
       [x-1, y+1], [x, y+1], [x+1, y+1]
     ];
-    return adjacentSquaresArr.filter((cur) => {
-      return cur[0] >= 0 && cur[0] < game.width && cur[1] >= 0 && cur[1] < game.height;
-    })
-    .reduce((arr, cur) => {
-      arr.push(cur.join(','));
+    return adjacentSquaresArr.reduce((arr, cur) => {
+      if(cur[0] >= 0 && cur[0] < game.width && cur[1] >= 0 && cur[1] < game.height) {
+        arr.push(cur.join(','));
+      }
       return arr;
     }, []);
   }
 
   countAdjacentLivingSquares(stringCoords) {
-    const liveSquares = this.state.liveSquares;
-    const squaresToCheck = this.getAdjacentSquares(stringCoords);
-    return squaresToCheck.reduce((count, cur) => {
-      return count + (liveSquares.includes(cur) ? 1 : 0);
-    }, 0);
-  }
-
-  render() {
     const game = this.props.game;
     const liveSquares = this.state.liveSquares;
+    const arrCoords = stringCoords.split(',');
+    const x = parseInt(arrCoords[0]), y = parseInt(arrCoords[1]);
+    const adjacentSquaresArr = [
+      [x-1, y-1], [x, y-1], [x+1, y-1],
+      [x-1, y], [x+1, y],
+      [x-1, y+1], [x, y+1], [x+1, y+1]
+    ];
+    return adjacentSquaresArr.reduce((count, cur) => {
+      if(cur[0] >= 0 && cur[0] < game.width && cur[1] >= 0 && cur[1] < game.height) {
+        if(liveSquares.includes(cur.join(','))) {
+          count++;
+        }
+      }
+      return count;
+    }, 0);
+
+  }
+
+  makeGrid() {
+    const game = this.props.game;
     const squares = [];
     for(let y = 0; y < game.height; y++) {
       for(let x = 0; x < game.width; x++) {
         squares.push(`${x},${y}`);
       }
     }
+    console.log(squares);
+    this.grid = squares.map((val) => <GameSquare alive={false}
+                                        coords={val}
+                                        addSquare={this.toggleLiveSquare} />);
+    console.log(this.grid);
+  }
+
+  toggleLiveSquare(stringCoords) {
+    console.log('square clicked ' + stringCoords);
+    const liveSquares = this.state.liveSquares;
+    if(liveSquares.includes(stringCoords)) {
+      const i = liveSquares.indexOf(stringCoords);
+      liveSquares.splice(i, 1);
+    } else {
+      liveSquares.push(stringCoords);
+    }
+    this.setState({ liveSquares });
+  }
+
+  render() {
+    const game = this.props.game;
+    const liveSquares = this.state.liveSquares;
+
+    if(game.isPaused) {
+      clearInterval(this.interval);
+      this.interval = null;
+    } else if(!this.interval) {
+      this.interval = setInterval(this.getNextBoard, this.props.speed);
+    }
 
     return (
       <div>
         <GenerationCounter count={game.generations} />
-        <div style={{width: `${10 * game.width}` , height: `${10 * game.height}`, display: 'flex', flexWrap: 'wrap'}}>
-        {squares.map((stringCoords) => {
-          return (
-            <GameSquare alive={liveSquares.includes(stringCoords)}
-            x={stringCoords.split(',')[0]}
-            y={stringCoords.split(',')[1]}/>
-          );
-        })}
+        <div style={{
+          width: `${10 * game.width}px`,
+          height: `${10 * game.height}px`,
+          display: 'flex',
+          flexWrap: 'wrap',
+          position: 'relative'
+        }} >
+          {this.grid}
+          {liveSquares.map((sq, i) => <GameSquare key={i} alive={true} coords={sq} addSquare={this.toggleLiveSquare}/> )}
         </div>
       </div>
     );

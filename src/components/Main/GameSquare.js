@@ -1,24 +1,24 @@
 import React from 'react';
 
 export default class GameSquare extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      x: this.props.x,
-      y: this.props.y
-    }
-  }
   render() {
-    const style = {
-      color: 'white',
-      boxSizing: 'border-box',
-      border: '1px solid black',
-      width: 10,
-      height: 10,
-      backgroundColor: (this.props.alive ? 'black' : 'lightgrey')
+    let style;
+    let onclick;
+    if(this.props.alive) {
+      const coords = this.props.coords.split(',');
+      style = {
+        left: `${coords[0] * 10}px`,
+        top: `${coords[1] * 10}px`,
+      };
+    } else {
+      style = {};
     }
     return (
-      <div style={style} className='game-square'>
+      <div className={`square ${this.props.alive ? 'live' : ''}`}
+        style={style}
+        onClick={() => {
+          this.props.addSquare(this.props.coords);
+        }} >
       </div>
     );
   };
