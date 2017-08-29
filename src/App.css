@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Baloo+Bhaijaan');
+
+body {
+  font-family: 'Baloo Bhaijaan', cursive;
+}
+
 .square {
   color: white;
   box-sizing: border-box;
@@ -10,3 +16,103 @@
   position: absolute;
   background: black;
 }
+.container {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Sidebar.css */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  order: 1;
+  width: 25%;
+  border-right: 1px solid lightgrey;
+  z-index: 1;
+  background: white;
+}
+
+/* Gameboard.css */
+.gameboard {
+  order: 2;
+  padding-left: 26%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* GenerationCounter.css */
+.generation-counter {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+/* GameControls.css */
+.game-controls {
+  text-align: center;
+}
+.button {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 5px 10px;
+  margin: 5px;
+  text-align: center;
+  width: 100px;
+  border-radius: 10px;
+  border: none;
+  background-color: lightblue;
+  color: #fff;
+}
+.button:focus {
+  outline: none;
+}
+.resume {
+  background: linear-gradient(lightblue, steelblue);
+}
+.pause {
+  background: linear-gradient(orange, coral);
+}
+.start {
+  background: linear-gradient(lightgreen, seagreen);
+}
+.clear {
+  background: linear-gradient(red, darkred);
+}
+
+/* SizeConfig.css */
+.size-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+.size-control {
+  width: 50px;
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid;
+  /* padding-left: 10px; */
+  /* padding-right: 10px; */
+}
+
+/* SpeedConfig.css */
+.speed-controls {
+  width: 80%;
+  margin: 10px auto;
+  display: flex;
+  justify-content: space-between;
+}
+.speed-control {
+  width: 50px;
+  text-align: center;
+  background-color: black;
+  color: #fff;
+  border-radius: 5px;
+}
+.speed-control:hover {
+  cursor: pointer;
+}
+.speed-control.active {
+  background-color: grey;
+}
+

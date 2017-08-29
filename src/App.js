@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import 'normalize.css';
 import './App.css';
 
 import Gameboard from './components/Main/Gameboard';
@@ -8,6 +9,8 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.changeSpeed = this.changeSpeed.bind(this);
+    this.resetGame = this.resetGame.bind(this);
+    this.resizeBoard = this.resizeBoard.bind(this);
     this.toggleIsPaused = this.toggleIsPaused.bind(this);
     this.toggleIsStarted = this.toggleIsStarted.bind(this);
     this.updateGame = this.updateGame.bind(this);
@@ -18,8 +21,8 @@ class App extends Component {
     };
     this.state = {
       game: {
-        width: 50,
-        height: 50,
+        width: 30,
+        height: 30,
         isPaused: false,
         isStarted: true,
         generations: 0,
@@ -30,6 +33,20 @@ class App extends Component {
   changeSpeed(speed) {
     const game = this.state.game;
     game.speed = this.speeds[speed];
+    this.setState({ game });
+  }
+  resetGame() {
+    const game = this.state.game;
+    game.shouldReset = true;
+    game.isPaused = false;
+    game.isStarted = false;
+    game.generations = 0;
+    this.setState({ game });
+  }
+  resizeBoard(width, height) {
+    const game = this.state.game;
+    game.width = width;
+    game.height = height;
     this.setState({ game });
   }
   toggleIsPaused() {
@@ -50,7 +67,7 @@ class App extends Component {
   render() {
     const game = this.state.game;
     return (
-      <div>
+      <div className='container'>
         <Gameboard game={game}
           speed={game.speed}
           update={this.updateGame} />
@@ -58,7 +75,13 @@ class App extends Component {
           isStarted={game.isStarted}
           changeSpeed={this.changeSpeed}
           pauseGame={this.toggleIsPaused}
-          startGame={this.toggleIsStarted}/>
+          resetGame={this.resetGame}
+          startGame={this.toggleIsStarted}
+          gameWidth={game.width}
+          gameHeight={game.height}
+          resize={this.resizeBoard}
+          speed={this.state.game.speed}
+        />
       </div>
     );
   }

@@ -3,7 +3,7 @@ import React from 'react';
 export default class GenerationCounter extends React.Component {
   render() {
     return (
-      <div>
+      <div className='generation-counter'>
         Generation: {this.props.count}
       </div>
     );

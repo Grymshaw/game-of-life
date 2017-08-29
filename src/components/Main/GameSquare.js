@@ -3,7 +3,6 @@ import React from 'react';
 export default class GameSquare extends React.Component {
   render() {
     let style;
-    let onclick;
     if(this.props.alive) {
       const coords = this.props.coords.split(',');
       style = {

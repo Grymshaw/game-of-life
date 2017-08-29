@@ -25,6 +25,16 @@ export default class Gameboard extends React.Component {
       clearInterval(this.interval);
       this.interval = setInterval(this.getNextBoard, nextProps.speed);
     }
+    //reset liveSqures if game is reset
+    if(nextProps.game.shouldReset) {
+      this.resetLiveSquares();
+      const game = this.props.game;
+      game.shouldReset = false;
+      this.props.update(game);
+    }
+    if(nextProps.game.width !== this.props.game.width || nextProps.game.height !== this.props.game.height)
+      this.setState({ liveSquares: [] });
+      this.makeGrid();
   }
 
   getNextBoard() {
@@ -106,7 +116,6 @@ export default class Gameboard extends React.Component {
       }
       return count;
     }, 0);
-
   }
 
   makeGrid() {
@@ -117,11 +126,14 @@ export default class Gameboard extends React.Component {
         squares.push(`${x},${y}`);
       }
     }
-    console.log(squares);
-    this.grid = squares.map((val) => <GameSquare alive={false}
+    this.grid = squares.map((val, i) => <GameSquare key={i}
+                                        alive={false}
                                         coords={val}
                                         addSquare={this.toggleLiveSquare} />);
-    console.log(this.grid);
+  }
+
+  resetLiveSquares() {
+    this.setState({ liveSquares: [] });
   }
 
   toggleLiveSquare(stringCoords) {
@@ -140,22 +152,24 @@ export default class Gameboard extends React.Component {
     const game = this.props.game;
     const liveSquares = this.state.liveSquares;
 
-    if(game.isPaused) {
+    if(game.isPaused || !game.isStarted) {
       clearInterval(this.interval);
       this.interval = null;
-    } else if(!this.interval) {
+    } else if(!this.interval && game.isStarted) {
       this.interval = setInterval(this.getNextBoard, this.props.speed);
     }
 
     return (
-      <div>
+      <div className='gameboard'>
         <GenerationCounter count={game.generations} />
         <div style={{
           width: `${10 * game.width}px`,
           height: `${10 * game.height}px`,
           display: 'flex',
           flexWrap: 'wrap',
-          position: 'relative'
+          position: 'relative',
+          borderRadius: '5px',
+          overflow: 'hidden'
         }} >
           {this.grid}
           {liveSquares.map((sq, i) => <GameSquare key={i} alive={true} coords={sq} addSquare={this.toggleLiveSquare}/> )}
