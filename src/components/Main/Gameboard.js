@@ -12,9 +12,13 @@ export default class Gameboard extends React.Component {
     this.getNextBoard = this.getNextBoard.bind(this);
 
     const liveSquares = this.randomizeBoard();
-    this.state = { liveSquares };
+    const grid = this.makeGrid();
+    this.state = {
+      liveSquares,
+      grid
+    };
 
-    this.makeGrid();
+    // this.makeGrid();
 
     this.interval = setInterval(this.getNextBoard, this.props.speed);
   }
@@ -32,9 +36,13 @@ export default class Gameboard extends React.Component {
       game.shouldReset = false;
       this.props.update(game);
     }
-    if(nextProps.game.width !== this.props.game.width || nextProps.game.height !== this.props.game.height)
-      this.setState({ liveSquares: [] });
-      this.makeGrid();
+    if(nextProps.width !== this.props.width || nextProps.height !== this.props.height) {
+      const grid = this.makeGrid();
+      this.setState({
+        liveSquares: [],
+        grid
+      });
+    }
   }
 
   getNextBoard() {
@@ -119,6 +127,7 @@ export default class Gameboard extends React.Component {
   }
 
   makeGrid() {
+    console.log('remaking grid');
     const game = this.props.game;
     const squares = [];
     for(let y = 0; y < game.height; y++) {
@@ -126,10 +135,13 @@ export default class Gameboard extends React.Component {
         squares.push(`${x},${y}`);
       }
     }
-    this.grid = squares.map((val, i) => <GameSquare key={i}
-                                        alive={false}
-                                        coords={val}
-                                        addSquare={this.toggleLiveSquare} />);
+    return squares.map((val, i) => (
+      <GameSquare
+        key={i}
+        alive={false}
+        coords={val}
+        addSquare={this.toggleLiveSquare} />
+    ));
   }
 
   resetLiveSquares() {
@@ -171,7 +183,7 @@ export default class Gameboard extends React.Component {
           borderRadius: '5px',
           overflow: 'hidden'
         }} >
-          {this.grid}
+          {this.state.grid}
           {liveSquares.map((sq, i) => <GameSquare key={i} alive={true} coords={sq} addSquare={this.toggleLiveSquare}/> )}
         </div>
       </div>

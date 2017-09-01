@@ -69,6 +69,8 @@ class App extends Component {
     return (
       <div className='container'>
         <Gameboard game={game}
+          width={game.width}
+          height={game.height}
           speed={game.speed}
           update={this.updateGame} />
         <Sidebar isPaused={game.isPaused}
